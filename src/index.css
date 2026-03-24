@@ -205,9 +205,9 @@
   }
   
   /* Animations */
-  .fade-in {
+  /* .fade-in {
     @apply animate-in fade-in duration-200;
-  }
+  } */
   
   .slide-in {
     @apply animate-in slide-in-from-right duration-300;

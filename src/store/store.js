@@ -15,7 +15,7 @@ export const store = configureStore({
     popup: popupReducer,
     admin: adminReducer,
     deadline: deadlineReducer,
-    notification: notificationReducer,
+    notifications: notificationReducer,
     project: projectReducer,
     request: requestReducer,
     student: studentReducer,

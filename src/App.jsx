@@ -30,14 +30,160 @@ import ManageTeachers from "./pages/admin/ManageTeachers";
 import AssignSupervisor from "./pages/admin/AssignSupervisor";
 import DeadlinesPage from "./pages/admin/DeadlinesPage";
 import ProjectsPage from "./pages/admin/ProjectsPage";
+//
+import NotFound from "./pages/NotFound";
+
 import { useDispatch, useSelector } from "react-redux";
 import { ToastContainer } from "react-toastify";
 import { Loader } from "lucide-react";
+import { getUser } from "./store/slices/authSlice";
+
+import { getAllProjects, getAllUsers } from "./store/slices/adminSlice";
+import { fetchDashboardStats } from "./store/slices/studentSlice";
 
 const App = () => {
+  const dispatch = useDispatch();
+  const { authUser, isCheckingAuth } = useSelector((state) => state.auth);
 
+  useEffect(() => {
+    // You can dispatch an action to check authentication status here
+    dispatch(getUser());
+  }, [dispatch]);
+
+  useEffect(() => {
+    if (authUser?.role === "Admin") {
+      dispatch(getAllUsers());
+      dispatch(getAllProjects());
+    }
+    if (authUser?.role === "Student") {
+      dispatch(fetchDashboardStats);
+    }
+  }, [dispatch, authUser]);
+
+  const ProtectedRoute = ({ children, allowRoles }) => {
+    if (!authUser) {
+      return <Navigate to="/login" replace />;
+    }
+
+    if (
+      allowRoles?.length &&
+      authUser?.role &&
+      !allowRoles.includes(authUser.role)
+    ) {
+      const redirectPath =
+        authUser.role === "Admin" ? "/admin"
+        : authUser.role === "Teacher" ? "/teacher"
+        : "/student";
+      return <Navigate to={redirectPath} replace />;
+    }
+    return children;
+  };
+
+  if (isCheckingAuth && !authUser) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <Loader className="animate-spin" size={48} />
+      </div>
+    );
+  }
   return (
-    <></>
+    <BrowserRouter>
+      <Routes>
+        {/* Auth Routes */}
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+        <Route path="/reset-password" element={<ResetPasswordPage />} />
+
+        {/* Admin Routes */}
+        <Route
+          path="/admin"
+          element={
+            <ProtectedRoute allowRoles={["Admin"]}>
+              <DashboardLayout userRole={"Admin"} />
+            </ProtectedRoute>
+          }
+        >
+          <Route index element={<AdminDashboard />} />
+
+          <Route path="students" element={<ManageStudents />} />
+          <Route path="teachers" element={<ManageTeachers />} />
+          <Route path="assign-supervisor" element={<AssignSupervisor />} />
+          <Route path="deadlines" element={<DeadlinesPage />} />
+          <Route path="projects" element={<ProjectsPage />} />
+        </Route>
+
+        {/* Student Routes */}
+        <Route
+          path="/student"
+          element={
+            <ProtectedRoute allowRoles={["Student"]}>
+              <DashboardLayout userRole={"Student"} />
+            </ProtectedRoute>
+          }
+        >
+          <Route index element={<StudentDashboard />} />
+
+          <Route path="submit-proposal" element={<SubmitProposal />} />
+          <Route path="upload-files" element={<UploadFiles />} />
+          <Route path="supervisor" element={<SupervisorPage />} />
+          <Route path="feedback" element={<FeedbackPage />} />
+          <Route path="notifications" element={<NotificationsPage />} />
+        </Route>
+
+        {/* Teacher Routes */}
+        <Route
+          path="/teacher"
+          element={
+            <ProtectedRoute allowRoles={["Teacher"]}>
+              <DashboardLayout userRole={"Teacher"} />
+            </ProtectedRoute>
+          }
+        >
+          <Route index element={<TeacherDashboard />} />
+
+          <Route path="pending-requests" element={<PendingRequests />} />
+          <Route path="assigned-students" element={<AssignedStudents />} />
+          <Route path="files" element={<TeacherFiles />} />
+        </Route>
+
+        {/* Default Redirect */}
+        <Route path="/" element={<Navigate to="/login" replace />} />
+        <Route
+          path="/unauthorized"
+          element={
+            <div className="flex flex-col items-center justify-center min-h-screen">
+              <h1 className="text-4xl font-bold text-red-600">403</h1>
+              <p className="text-2xl mt-2">Unauthorized Access</p>
+              <p
+                className="text-gray-600 mt-1
+"
+              >
+                You do not have permission to access this page.
+              </p>
+              <button
+                onClick={() => window.history.back()}
+                className="mt-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+              >
+                Go Back
+              </button>
+            </div>
+          }
+        />
+        <Route path="*" element={ <NotFound/>} />
+      </Routes>
+
+      <ToastContainer
+        position="top-right"
+        autoClose={3000}
+        hideProgressBar={false}
+        newestOnTop={false}
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+      />
+    </BrowserRouter>
   );
 };
 
