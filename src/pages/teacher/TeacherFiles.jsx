@@ -154,7 +154,7 @@ const TeacherFiles = () => {
       ).unwrap();
 
       const fileUrl = res.fileUrl || file.fileUrl;
-      window.open(fileUrl, "_blank");
+      window.location.href = fileUrl;
     } catch (error) {
       console.error("Enter downloading file", error);
       toast.error("Failed to download file.Please try again...");
