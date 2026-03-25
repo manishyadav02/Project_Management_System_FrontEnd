@@ -144,20 +144,40 @@ const TeacherFiles = () => {
   });
 
   const handleDownload = async (file) => {
+    if (!file.projectId || (!file._id && !file.id)) {
+      toast.error("Error: Missing Project ID or File ID.");
+      return;
+    }
+
     try {
       const res = await dispatch(
         downloadTeacherFile({
           projectId: file.projectId,
-
           fileId: file._id || file.id,
         }),
       ).unwrap();
 
       const fileUrl = res.fileUrl || file.fileUrl;
-      window.location.href = fileUrl;
+      const fileName = res.fileName || file.fileName || "document";
+
+      const response = await fetch(fileUrl);
+      const blobData = await response.blob();
+
+      const url = window.URL.createObjectURL(blobData);
+      const link = document.createElement("a");
+      link.href = url;
+
+      link.setAttribute("download", fileName);
+
+      document.body.appendChild(link);
+      link.click();
+      link.parentNode.removeChild(link);
+      window.URL.revokeObjectURL(url);
+
+      toast.success("File downloaded successfully!");
     } catch (error) {
-      console.error("Enter downloading file", error);
-      toast.error("Failed to download file.Please try again...");
+      console.error("Download error:", error);
+      toast.error(error?.message || "Failed to download file.");
     }
   };
 

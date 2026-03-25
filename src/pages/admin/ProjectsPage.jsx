@@ -18,7 +18,7 @@ import {
 import {
   approveProject,
   rejectProject,
-  getProject,
+  
 } from "../../store/slices/adminSlice";
 import { downloadProjectFile } from "../../store/slices/projectSlice";
 
